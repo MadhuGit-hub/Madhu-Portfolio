@@ -20,6 +20,8 @@ import {
   Zap,
   Briefcase
 } from 'lucide-react';
+import resume from './assets/resume.pdf';
+import profilePic from './assets/Photo.png';
 
 const Github = (props) => (
   <svg
@@ -302,7 +304,7 @@ const Hero = () => {
               View Projects
             </motion.a>
             <motion.a 
-              href="/src/assets/resume.pdf" target="_blank"
+              href={resume} target="_blank"
               whileHover={{ scale: 1.04 }} 
               whileTap={{ scale: 0.97 }}
               className="btn-primary flex items-center gap-2"
@@ -327,7 +329,7 @@ const Hero = () => {
                <div className="absolute inset-0 rounded-full border-4 border-dashed border-violet/20 animate-spin-slow" />
                <div className="w-[90%] h-[90%] rounded-full bg-gradient-to-tr from-[#0a0025] to-[#000d1a] flex items-center justify-center overflow-hidden">
                   <span className="text-8xl font-syne font-800 text-gradient opacity-20">MC</span>
-                  <img src="/src/assets/Photo.png" alt="Madhu Cherukuri" className="absolute inset-0 w-full h-full object-cover opacity-80" />
+                  <img src={profilePic} alt="Madhu Cherukuri" className="absolute inset-0 w-full h-full object-cover opacity-80" />
                </div>
             </TiltCard>
             
