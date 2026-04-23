@@ -1,90 +1,191 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@100;200;300;400;500;600;700;800&display=swap');
 
 @theme {
-  --color-violet: #7C3AED;
-  --color-cyan: #06B6D4;
-  --color-pink: #EC4899;
-  --color-white: #F8FAFC;
-  --color-muted: #94A3B8;
+  --color-cyber-cyan: #00f2ff;
+  --color-cyber-purple: #bc13fe;
+  --color-cyber-pink: #ff00f7;
+  --color-cyber-bg: #020205;
+  --color-cyber-text: #e0e0e0;
+  --color-cyber-muted: #666666;
 
-  --font-syne: "Syne", sans-serif;
-  --font-dmsans: "DM Sans", sans-serif;
+  --font-rajdhani: "Rajdhani", sans-serif;
+  --font-orbitron: "Orbitron", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
 
-  --animate-spin-slow: spin 8s linear infinite;
-  --animate-pulse-slow: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-scanline: scanline 8s linear infinite;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-glitch: glitch 0.3s cubic-bezier(.25, .46, .45, .94) both infinite;
 }
 
 @layer base {
   body {
-    @apply bg-[#03000f] text-white font-dmsans selection:bg-violet/30 selection:text-white;
+    @apply bg-cyber-bg text-cyber-text font-rajdhani selection:bg-cyber-cyan/30 selection:text-white;
+    overflow-x: hidden;
   }
 }
 
-@utility glass {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  backdrop-filter: blur(24px);
-  border-radius: 20px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+@utility hud-border {
+  clip-path: polygon(
+    0% 15px, 15px 0%, 
+    calc(100% - 15px) 0%, 100% 15px, 
+    100% calc(100% - 15px), calc(100% - 15px) 100%, 
+    15px 100%, 0% calc(100% - 15px)
+  );
+  border: 1px solid rgba(0, 242, 255, 0.2);
+  background: rgba(0, 242, 255, 0.03);
+  backdrop-filter: blur(10px);
+}
+
+@layer utilities {
+  .holographic {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .holographic::before {
+    content: "";
+    position: absolute;
+    top: -100%;
+    left: -100%;
+    width: 300%;
+    height: 300%;
+    background: linear-gradient(
+      45deg,
+      transparent 45%,
+      rgba(0, 242, 255, 0.1) 48%,
+      rgba(188, 19, 254, 0.1) 50%,
+      rgba(0, 242, 255, 0.1) 52%,
+      transparent 55%
+    );
+    animation: shine 10s linear infinite;
+    pointer-events: none;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
 }
 
 @layer components {
-
-  .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-violet via-cyan to-pink;
+  .text-neon-cyan {
+    @apply text-cyber-cyan drop-shadow-[0_0_8px_rgba(0,242,255,0.5)];
+  }
+  
+  .text-neon-purple {
+    @apply text-cyber-purple drop-shadow-[0_0_8px_rgba(188,19,254,0.5)];
   }
 
-  .btn-primary {
-    @apply bg-gradient-to-r from-violet to-cyan px-6 py-3 rounded-xl font-medium transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_rgba(124,58,237,0.5)] active:scale-95;
+  .btn-cyber {
+    @apply relative px-8 py-3 font-orbitron font-bold uppercase tracking-wider transition-all duration-300;
+    clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
+    background: linear-gradient(45deg, var(--color-cyber-purple), var(--color-cyber-cyan));
+    color: white;
+    box-shadow: 0 0 15px rgba(0, 242, 255, 0.3);
   }
 
-  .btn-glass {
-    @apply glass border-violet/20 hover:border-violet/50 px-6 py-3 transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_rgba(124,58,237,0.3)] active:scale-95;
+  .btn-cyber:hover {
+    @apply scale-105;
+    box-shadow: 0 0 25px rgba(0, 242, 255, 0.6);
   }
 
-  .input-field {
-    @apply w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-muted focus:outline-none focus:border-violet/50 focus:bg-white/10 transition-all duration-300;
+  .glass-card {
+    @apply hud-border p-6 transition-all duration-500 hover:border-cyber-cyan/50 hover:bg-cyber-cyan/5;
   }
 }
 
-/* Antigravity Floating Blobs */
-.blob {
+/* Global Effects */
+.scanline {
   position: fixed;
-  border-radius: 50%;
-  width: 600px;
-  height: 600px;
-  filter: blur(120px);
-  z-index: 0;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    transparent 50%,
+    rgba(0, 242, 255, 0.02) 50%
+  );
+  background-size: 100% 4px;
+  z-index: 9999;
   pointer-events: none;
-  animation: float 12s ease-in-out infinite alternate;
+  opacity: 0.5;
 }
 
-@keyframes float {
-  0% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(100px, 50px) scale(1.1); }
-  100% { transform: translate(-50px, 100px) scale(0.9); }
+.noise {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3%3Cfilter id='noiseFilter'%3%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3%3C/filter%3%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3%3C/svg%3");
+  opacity: 0.03;
+  z-index: 9998;
+  pointer-events: none;
 }
 
-@keyframes rotate {
+@keyframes scanline {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(100%); }
+}
+
+@keyframes shine {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@keyframes glitch {
+  0% { transform: translate(0); }
+  20% { transform: translate(-2px, 2px); }
+  40% { transform: translate(-2px, -2px); }
+  60% { transform: translate(2px, 2px); }
+  80% { transform: translate(2px, -2px); }
+  100% { transform: translate(0); }
+}
+
+@keyframes scan {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.animate-scan {
+  animation: scan 3s linear infinite;
+}
+
+@keyframes reverse-spin {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+.animate-reverse-spin {
+  animation: reverse-spin 8s linear infinite;
+}
+
+@keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
 
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+.animate-spin-slow {
+  animation: spin 8s linear infinite;
 }
 
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
+/* Scrollbar Customization */
+::-webkit-scrollbar {
+  width: 8px;
 }
-
-.animate-blink { animation: blink 1s step-end infinite; }
-.animate-shimmer {
-  background: linear-gradient(90deg, rgba(255,255,255,0.1) 25%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0.1) 75%);
-  background-size: 200% 100%;
-  animation: shimmer 2s infinite;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+::-webkit-scrollbar-track {
+  background: var(--color-cyber-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-cyber-purple);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-cyber-cyan);
 }

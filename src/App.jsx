@@ -95,18 +95,44 @@ const TiltCard = ({ children, className = "" }) => {
       style={{
         rotateX: dy,
         rotateY: dx,
-        transformPerspective: 1000,
+        transformPerspective: 1200,
       }}
-      className={`glass relative group overflow-hidden ${className}`}
+      className={`glass-card holographic relative group overflow-hidden ${className}`}
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-violet/5 to-cyan/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-      {children}
+      <div className="absolute inset-0 bg-gradient-to-br from-cyber-cyan/10 to-cyber-purple/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-cyber-cyan to-transparent opacity-50" />
+      <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-cyber-purple to-transparent opacity-50" />
+      {/* HUD Corners Decor */}
+      <div className="absolute top-2 left-2 w-2 h-2 border-t-2 border-l-2 border-cyber-cyan/40" />
+      <div className="absolute top-2 right-2 w-2 h-2 border-t-2 border-r-2 border-cyber-cyan/40" />
+      <div className="absolute bottom-2 left-2 w-2 h-2 border-b-2 border-l-2 border-cyber-cyan/40" />
+      <div className="absolute bottom-2 right-2 w-2 h-2 border-b-2 border-r-2 border-cyber-cyan/40" />
+      
+      <div className="relative z-10">{children}</div>
     </motion.div>
   );
 };
 
-// --- COMPONENT: Particle Canvas ---
-const ParticleCanvas = () => {
+// --- COMPONENT: HUD Decorator ---
+const HUDDecorator = () => (
+  <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
+    <div className="absolute top-10 left-10 font-mono text-[10px] text-cyber-cyan/20 space-y-1">
+      <div>SYSTEM_STATUS: ACTIVE</div>
+      <div>CORE_TEMP: 32.4C</div>
+      <div>NEURAL_LINK: STABLE</div>
+    </div>
+    <div className="absolute bottom-10 right-10 font-mono text-[10px] text-cyber-purple/20 text-right space-y-1">
+      <div>PROTOCOL: CYBER_P0RT_V4</div>
+      <div>ENCRYPTION: AES-256</div>
+      <div>LOCATION: HYDERABAD_IN</div>
+    </div>
+    <div className="scanline" />
+    <div className="noise" />
+  </div>
+);
+
+// --- COMPONENT: Neural Grid ---
+const NeuralGrid = () => {
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -114,67 +140,74 @@ const ParticleCanvas = () => {
     const ctx = canvas.getContext('2d');
     let animationFrameId;
 
-    const particles = [];
-    const particleCount = 80;
-
     const resize = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
     };
 
-    class Particle {
-      constructor() {
-        this.reset();
-      }
-      reset() {
-        this.x = Math.random() * canvas.width;
-        this.y = Math.random() * canvas.height;
-        this.vx = (Math.random() - 0.5) * 0.6;
-        this.vy = (Math.random() - 0.5) * 0.6;
-        this.size = Math.random() * 2 + 1;
-      }
-      update() {
-        this.x += this.vx;
-        this.y += this.vy;
-        if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
-        if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
-      }
-      draw() {
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-        ctx.fill();
-      }
+    const lines = [];
+    const lineCount = 40;
+
+    for (let i = 0; i < lineCount; i++) {
+      lines.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        length: Math.random() * 100 + 50,
+        speed: Math.random() * 2 + 1,
+        opacity: Math.random() * 0.5
+      });
     }
 
-    for (let i = 0; i < particleCount; i++) particles.push(new Particle());
-
-    const animate = () => {
+    const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      particles.forEach((p, i) => {
-        p.update();
-        p.draw();
-        for (let j = i + 1; j < particles.length; j++) {
-          const p2 = particles[j];
-          const dx = p.x - p2.x;
-          const dy = p.y - p2.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 120) {
-            ctx.beginPath();
-            ctx.strokeStyle = `rgba(255, 255, 255, ${0.1 * (1 - dist / 120)})`;
-            ctx.lineWidth = 0.5;
-            ctx.moveTo(p.x, p.y);
-            ctx.lineTo(p2.x, p2.y);
-            ctx.stroke();
-          }
+      
+      // Perspective Grid
+      ctx.strokeStyle = 'rgba(0, 242, 255, 0.05)';
+      ctx.lineWidth = 1;
+
+      // Horizontal lines
+      for (let i = 0; i < canvas.height; i += 40) {
+        ctx.beginPath();
+        ctx.moveTo(0, i);
+        ctx.lineTo(canvas.width, i);
+        ctx.stroke();
+      }
+
+      // Vertical lines from perspective point
+      const centerX = canvas.width / 2;
+      const horizon = canvas.height * 0.4;
+      for (let i = -canvas.width; i < canvas.width * 2; i += 80) {
+        ctx.beginPath();
+        ctx.moveTo(centerX, horizon);
+        ctx.lineTo(i, canvas.height);
+        ctx.stroke();
+      }
+
+      // Moving Data Streams
+      ctx.lineWidth = 2;
+      lines.forEach(l => {
+        ctx.beginPath();
+        const gradient = ctx.createLinearGradient(l.x, l.y, l.x, l.y + l.length);
+        gradient.addColorStop(0, `rgba(0, 242, 255, 0)`);
+        gradient.addColorStop(1, `rgba(0, 242, 255, ${l.opacity})`);
+        ctx.strokeStyle = gradient;
+        ctx.moveTo(l.x, l.y);
+        ctx.lineTo(l.x, l.y + l.length);
+        ctx.stroke();
+
+        l.y += l.speed;
+        if (l.y > canvas.height) {
+          l.y = -l.length;
+          l.x = Math.random() * canvas.width;
         }
       });
-      animationFrameId = requestAnimationFrame(animate);
+
+      animationFrameId = requestAnimationFrame(draw);
     };
 
     window.addEventListener('resize', resize);
     resize();
-    animate();
+    draw();
 
     return () => {
       window.removeEventListener('resize', resize);
@@ -182,7 +215,7 @@ const ParticleCanvas = () => {
     };
   }, []);
 
-  return <canvas ref={canvasRef} className="absolute inset-0 z-0 pointer-events-none opacity-40" />;
+  return <canvas ref={canvasRef} className="fixed inset-0 z-0 pointer-events-none opacity-40" />;
 };
 
 // --- COMPONENT: Loading Screen ---
@@ -194,42 +227,49 @@ const LoadingScreen = ({ onComplete }) => {
       setProgress(prev => {
         if (prev >= 100) {
           clearInterval(interval);
-          setTimeout(onComplete, 300);
+          setTimeout(onComplete, 800);
           return 100;
         }
-        return prev + 1.25;
+        return prev + 2;
       });
-    }, 30);
+    }, 40);
     return () => clearInterval(interval);
   }, []);
 
   return (
     <motion.div 
       initial={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[1000] bg-[#03000f] flex flex-col items-center justify-center p-6"
+      exit={{ opacity: 0, scale: 1.1, filter: 'blur(20px)' }}
+      className="fixed inset-0 z-[1000] bg-cyber-bg flex flex-col items-center justify-center p-6 overflow-hidden"
     >
-      <div className="relative w-32 h-32 flex items-center justify-center mb-8">
-        <div 
-          className="absolute inset-0 rounded-full border-2 border-dashed border-violet/30"
-          style={{ animation: 'rotate 4s linear infinite' }}
-        />
-        <div 
-          className="absolute inset-0 rounded-full border-2 border-t-violet border-r-cyan border-b-pink border-l-transparent shadow-[0_0_60px_rgba(124,58,237,0.6)]"
-          style={{ animation: 'rotate 1s linear infinite' }}
-        />
-        <span className="text-4xl font-syne font-800 text-gradient">MC</span>
+      <div className="absolute inset-0 opacity-10 pointer-events-none">
+        <div className="scanline" />
+        <div className="noise" />
+      </div>
+
+      <div className="relative w-40 h-40 flex items-center justify-center mb-12">
+        <div className="absolute inset-0 border border-cyber-cyan/20 rounded-full animate-spin-slow" />
+        <div className="absolute inset-[-10px] border-t-2 border-l-2 border-cyber-cyan/60 rounded-full animate-spin" />
+        <div className="absolute inset-[-20px] border-b-2 border-r-2 border-cyber-purple/60 rounded-full animate-reverse-spin" style={{ animationDuration: '3s' }} />
+        <span className="text-5xl font-orbitron font-900 text-neon-cyan relative z-10">MC</span>
       </div>
       
-      <h2 className="text-muted font-dmsans tracking-[0.3em] uppercase text-sm mb-6 animate-shimmer">
-        Initializing Portfolio...
-      </h2>
+      <div className="text-center space-y-4">
+        <h2 className="text-cyber-cyan font-mono tracking-[0.5em] uppercase text-xs animate-pulse">
+          // ESTABLISHING_NEURAL_LINK
+        </h2>
+        <div className="font-mono text-[10px] text-cyber-muted space-y-1">
+          <div>ENCRYPTING_DATA... [OK]</div>
+          <div>LOADING_ASSETS... [{progress}%]</div>
+        </div>
+      </div>
 
-      <div className="w-full max-w-[480px] h-1.5 glass overflow-hidden rounded-full">
+      <div className="w-full max-w-[400px] h-1 bg-cyber-cyan/10 mt-8 relative overflow-hidden">
         <motion.div 
-          className="h-full bg-gradient-to-r from-violet via-cyan to-pink shadow-[0_0_20px_rgba(124,58,237,0.8)]"
+          className="h-full bg-gradient-to-r from-cyber-purple to-cyber-cyan shadow-[0_0_15px_rgba(0,242,255,0.8)]"
           style={{ width: `${progress}%` }}
         />
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-scan" style={{ animationDuration: '2s' }} />
       </div>
     </motion.div>
   );
@@ -258,88 +298,96 @@ const Hero = () => {
     return () => clearTimeout(timer);
   }, [text, isDeleting, phraseIndex]);
 
-  // Parallax logic for blobs
   const { scrollY } = useScroll();
-  const blob1Y = useTransform(scrollY, [0, 1000], [0, 200]);
-  const blob2Y = useTransform(scrollY, [0, 1000], [0, -150]);
+  const yParallax = useTransform(scrollY, [0, 500], [0, 100]);
 
   return (
     <section id="home" className="relative min-h-screen flex items-center pt-20 overflow-hidden">
-      <ParticleCanvas />
-      
-      {/* Background Blobs */}
-      <motion.div style={{ y: blob1Y }} className="blob top-[-10%] left-[-10%] bg-[#7c3aed1e]" />
-      <motion.div style={{ y: blob2Y }} className="blob bottom-[-20%] right-[-10%] bg-[#06b6d412]" />
-      <div className="blob top-[30%] right-[-5%] bg-[#ec48990e]" />
-
       <div className="container mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center z-10">
         <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, staggerChildren: 0.2 }}
+          initial={{ opacity: 0, x: -50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8 }}
         >
-          <motion.p className="text-muted font-dmsans mb-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            Hi, I'm 👋
-          </motion.p>
-          <motion.h1 
-            className="text-6xl md:text-8xl font-syne font-800 text-gradient mb-6 drop-shadow-[0_0_80px_rgba(124,58,237,0.3)]"
-          >
-            Madhu Cherukuri
-          </motion.h1>
-          <div className="text-2xl md:text-3xl font-dmsans font-medium min-h-[40px] mb-6">
-            <span>{text}</span>
-            <span className="w-[3px] h-8 bg-violet inline-block ml-1 animate-blink align-middle" />
+          <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full border border-cyber-cyan/30 bg-cyber-cyan/5">
+            <span className="w-2 h-2 bg-cyber-cyan rounded-full animate-pulse shadow-[0_0_8px_#00f2ff]" />
+            <span className="text-[10px] font-mono tracking-widest text-cyber-cyan uppercase">SYSTEM_MANIFEST: ONLINE</span>
           </div>
-          <p className="text-muted text-lg max-w-lg mb-10 leading-relaxed font-dmsans">
-            Pre-Final Year CSE @ Anurag Engineering College · Hyderabad, India
+          
+          <motion.h1 
+            className="text-6xl md:text-8xl font-orbitron font-900 text-white mb-6 leading-tight"
+          >
+            MADHU <span className="text-neon-cyan italic">CHERUKURI</span>
+          </motion.h1>
+
+          <div className="font-mono text-xl md:text-2xl text-cyber-purple mb-8 flex items-center gap-2">
+            <span className="opacity-50">#</span>
+            <span className="animate-glitch">{text}</span>
+            <span className="w-2 h-6 bg-cyber-purple inline-block animate-blink" />
+          </div>
+
+          <p className="text-cyber-muted text-lg max-w-lg mb-10 leading-relaxed font-rajdhani font-medium">
+             PRE_FINAL_YEAR_CSE • HYDERABAD_IN • SDE_ENGINEERING
+             <br />
+             <span className="text-xs opacity-50 mt-2 block tracking-tighter">// DEVELOPING_SCALABLE_AI_INFRASTRUCTURE</span>
           </p>
           
           <div className="flex flex-wrap gap-4">
             <motion.a 
               href="#projects"
-              whileHover={{ scale: 1.04 }} 
-              whileTap={{ scale: 0.97 }}
-              className="btn-glass"
+              whileHover={{ scale: 1.05 }} 
+              whileTap={{ scale: 0.95 }}
+              className="btn-cyber"
             >
-              View Projects
+              ACCESS_PROJECTS
             </motion.a>
             <motion.a 
               href={resume} target="_blank"
-              whileHover={{ scale: 1.04 }} 
-              whileTap={{ scale: 0.97 }}
-              className="btn-primary flex items-center gap-2"
+              whileHover={{ scale: 1.05 }} 
+              whileTap={{ scale: 0.95 }}
+              className="px-8 py-3 glass-card text-cyber-cyan font-orbitron font-bold text-sm tracking-widest hover:border-cyber-cyan/50"
             >
-              Download Resume <Download size={18} />
+              EXTRACT_CV
             </motion.a>
           </div>
         </motion.div>
 
         <motion.div 
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
+          initial={{ opacity: 0, scale: 0.8, rotate: -5 }}
+          animate={{ opacity: 1, scale: 1, rotate: 0 }}
           transition={{ duration: 1, delay: 0.4 }}
           className="relative flex justify-center"
         >
-          <motion.div
-            animate={{ y: [0, -12, 0] }}
-            transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
-            className="w-full max-w-sm"
-          >
-            <TiltCard className="p-1 rounded-full aspect-square flex items-center justify-center">
-               <div className="absolute inset-0 rounded-full border-4 border-dashed border-violet/20 animate-spin-slow" />
-               <div className="w-[90%] h-[90%] rounded-full bg-gradient-to-tr from-[#0a0025] to-[#000d1a] flex items-center justify-center overflow-hidden">
-                  <span className="text-8xl font-syne font-800 text-gradient opacity-20">MC</span>
-                  <img src={profilePic} alt="Madhu Cherukuri" className="absolute inset-0 w-full h-full object-cover opacity-80" />
+          <motion.div style={{ y: yParallax }} className="relative w-full max-w-md aspect-square">
+            <TiltCard className="p-2 h-full rounded-none">
+               <div className="absolute inset-4 border border-white/5 pointer-events-none" />
+               <div className="w-full h-full bg-black/40 relative flex items-center justify-center overflow-hidden">
+                  <div className="absolute top-0 left-0 w-full h-full opacity-30 mix-blend-overlay">
+                    <div className="scanline" style={{ position: 'absolute' }} />
+                  </div>
+                  <img src={profilePic} alt="Madhu" className="w-full h-full object-cover grayscale opacity-80 mix-blend-lighten" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-cyber-bg via-transparent to-transparent" />
+               </div>
+               
+               {/* Floating Stats */}
+               <div className="absolute -right-4 top-1/4 space-y-4">
+                 {['3 Internships', '5+ Projects', '8.0 GPA'].map((stat, i) => (
+                   <motion.div 
+                    key={stat}
+                    initial={{ x: 20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: 0.8 + (i * 0.1) }}
+                    className="glass-card px-4 py-2 text-[10px] font-mono border-cyber-cyan/30 text-cyber-cyan backdrop-blur-md"
+                   >
+                     {stat}
+                   </motion.div>
+                 ))}
                </div>
             </TiltCard>
             
-            <div className="flex justify-center gap-4 mt-8 flex-wrap">
-              {['3 Internships', '5+ Projects', '8.0 GPA'].map((stat) => (
-                <div key={stat} className="glass px-4 py-2 text-sm font-medium border-violet/30 text-white/90">
-                  {stat}
-                </div>
-              ))}
-            </div>
+            {/* HUD Elements */}
+            <div className="absolute -inset-10 border border-cyber-cyan/10 pointer-events-none rounded-full animate-spin-slow opacity-20" />
+            <div className="absolute -inset-6 border border-cyber-purple/10 pointer-events-none rounded-full animate-reverse-spin opacity-10" />
           </motion.div>
         </motion.div>
       </div>
@@ -347,7 +395,8 @@ const Hero = () => {
       <motion.div 
         animate={{ y: [0, 10, 0], opacity: [0.3, 1, 0.3] }}
         transition={{ repeat: Infinity, duration: 2 }}
-        className="absolute bottom-10 left-1/2 -translate-x-1/2 text-muted"
+        className="absolute bottom-10 left-1/2 -translate-x-1/2 text-cyber-cyan cursor-pointer"
+        onClick={() => document.getElementById('about').scrollIntoView({ behavior: 'smooth' })}
       >
         <ChevronDown size={32} />
       </motion.div>
@@ -370,34 +419,40 @@ const About = () => {
   return (
     <section id="about" className="py-32 relative z-10">
       <div className="container mx-auto px-6">
-        <motion.h2 
-          className="text-4xl md:text-5xl font-syne font-800 text-gradient mb-16 text-center"
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+        <motion.div 
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          className="flex flex-col md:flex-row items-center gap-4 mb-16"
         >
-          About Me
-        </motion.h2>
+          <h2 className="text-4xl md:text-5xl font-orbitron font-900 text-white uppercase tracking-tighter">
+            USER_<span className="text-neon-cyan">PROFILE</span>
+          </h2>
+          <div className="flex-grow h-[2px] bg-gradient-to-r from-cyber-cyan/50 to-transparent" />
+          <span className="font-mono text-[10px] text-cyber-muted opacity-50 tracking-[0.3em]">ID: MC_SDE_V4</span>
+        </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
           <motion.div 
             initial={{ opacity: 0, x: -50 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            className="glass p-10 space-y-6"
+            className="glass-card p-10 space-y-6 relative"
           >
-            <p className="text-muted text-xl leading-relaxed">
-              I'm Madhu, a pre-final year CS student passionate about building AI-powered 
-              systems and scalable backend architectures. I thrive at the intersection of 
+            <div className="absolute top-4 right-4 font-mono text-[8px] text-cyber-cyan/30 animate-pulse">
+              // READING_BIO...
+            </div>
+            <p className="text-cyber-text text-xl leading-relaxed font-rajdhani">
+              I'm Madhu, a pre-final year CS student passionate about building <span className="text-cyber-cyan">AI-powered 
+              systems</span> and scalable backend architectures. I thrive at the intersection of 
               Machine Learning, Generative AI, and real-world software engineering.
             </p>
-            <p className="text-muted text-lg leading-relaxed">
+            <p className="text-cyber-muted text-lg leading-relaxed font-rajdhani">
               Based in <span className="text-white font-medium">Hyderabad, India</span>, I spend my time exploring LLMs, 
               optimizing data pipelines, and contributing to open-source projects.
             </p>
-            <div className="inline-flex items-center gap-3 glass px-5 py-3 border-emerald-500/20 shadow-[0_0_20px_rgba(16,185,129,0.15)]">
-              <span className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse" />
-              <span className="text-sm font-medium">Open to: SDE · AI Engineering · Backend Roles</span>
+            <div className="inline-flex items-center gap-3 glass-card px-5 py-3 border-cyber-cyan/20">
+              <span className="w-3 h-3 bg-cyber-pink rounded-full animate-pulse shadow-[0_0_10px_#ff00f7]" />
+              <span className="text-xs font-mono uppercase tracking-widest text-cyber-cyan">Status: Available for SDE Roles</span>
             </div>
           </motion.div>
 
@@ -410,16 +465,17 @@ const About = () => {
             {skills.map((skill, index) => (
               <div key={skill.name}>
                 <div className="flex justify-between mb-2">
-                  <span className="font-medium">{skill.name}</span>
-                  <span className="text-muted">{skill.value}%</span>
+                  <span className="font-mono text-xs uppercase tracking-widest text-cyber-cyan opacity-80">{skill.name}</span>
+                  <span className="font-mono text-xs text-cyber-purple">{skill.value}%</span>
                 </div>
-                <div className="h-2 glass rounded-full overflow-hidden">
+                <div className="h-1 bg-white/5 relative overflow-hidden">
                   <motion.div 
                     initial={{ width: 0 }}
                     whileInView={{ width: `${skill.value}%` }}
                     transition={{ duration: 1, delay: index * 0.1, ease: "easeOut" }}
-                    className="h-full bg-gradient-to-r from-violet to-cyan"
+                    className="h-full bg-gradient-to-r from-cyber-purple to-cyber-cyan"
                   />
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-scan" style={{ animationDuration: '3s' }} />
                 </div>
               </div>
             ))}
@@ -437,35 +493,35 @@ const Experience = () => {
       role: "Backend Engineering Intern",
       company: "Infosys Springboard — Cohort 6.0",
       period: "Feb 2026 – Mar 2026",
-      badge: "Industry Internship",
-      color: "pink",
+      badge: "Industry",
+      color: "cyan",
       points: [
-        "Built full-stack Smart Ride-Sharing & Carpooling Platform (React + Spring Boot + MySQL)",
-        "Integrated OSRM APIs for real-time dynamic distance calculation & route optimization",
-        "Implemented Stripe Payment Gateway for secure transactions + automated notification pipeline"
+        "Built full-stack Smart Ride-Sharing Platform (React + Spring Boot + MySQL)",
+        "Integrated OSRM APIs for real-time dynamic route optimization",
+        "Implemented Stripe Payment Gateway + automated notification pipeline"
       ]
     },
     {
       role: "AI/ML Research Intern",
-      company: "IIITDM Kancheepuram — Prof. Sk. Noor Mahammad",
+      company: "IIITDM Kancheepuram",
       period: "Sep 2025 – Nov 2025",
-      badge: "Research Internship",
-      color: "cyan",
+      badge: "Research",
+      color: "purple",
       points: [
-        "Designed and deployed a Hybrid ML model for real-time ransomware detection",
-        "Applied ensemble ML techniques to classify malicious vs. benign behavior",
-        "Curated & preprocessed multi-feature system activity datasets for threat intelligence"
+        "Designed Hybrid ML model for real-time ransomware detection",
+        "Applied ensemble techniques to classify malicious vs. benign behavior",
+        "Curated multi-feature system activity datasets for threat intelligence"
       ]
     },
     {
       role: "Backend Development Intern",
-      company: "VaultOfCodes (AICTE Approved)",
+      company: "VaultOfCodes",
       period: "Aug 2025",
-      badge: "Backend Internship",
-      color: "violet",
+      badge: "Backend",
+      color: "pink",
       points: [
-        "Built Library Management System backend in Java with JDBC-MySQL integration",
-        "Implemented full CRUD operations for 1,000+ book & user records"
+        "Built Library Management System in Java with JDBC-MySQL",
+        "Implemented full CRUD operations for 1,000+ records"
       ]
     }
   ];
@@ -473,48 +529,45 @@ const Experience = () => {
   return (
     <section id="experience" className="py-32 relative z-10">
       <div className="container mx-auto px-6">
-        <div className="text-center mb-20">
-          <motion.h2 
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            className="text-4xl md:text-5xl font-syne font-800 text-gradient inline-block relative after:content-[''] after:absolute after:bottom-[-10px] after:left-0 after:w-full after:h-[3px] after:bg-gradient-to-r after:from-violet after:to-cyan"
-          >
-            Experience
-          </motion.h2>
+        <div className="flex items-center gap-4 mb-20">
+          <h2 className="text-4xl md:text-5xl font-orbitron font-900 text-white uppercase tracking-tighter">
+            CAREER_<span className="text-neon-purple">LOGS</span>
+          </h2>
+          <div className="flex-grow h-[2px] bg-gradient-to-r from-cyber-purple/50 to-transparent" />
         </div>
 
         <div className="relative">
-          {/* Vertical Line */}
-          <div className="absolute left-1/2 top-0 bottom-0 w-[2px] bg-gradient-to-b from-violet via-cyan to-transparent hidden md:block" />
+          {/* Vertical Grid Line */}
+          <div className="absolute left-[21px] md:left-1/2 top-0 bottom-0 w-[1px] bg-cyber-purple/20 hidden md:block" />
 
-          <div className="space-y-12">
+          <div className="space-y-24">
             {experiences.map((exp, index) => (
               <div key={index} className={`flex flex-col md:flex-row items-center justify-between w-full ${index % 2 === 0 ? 'md:flex-row-reverse' : ''}`}>
                 <div className="w-full md:w-[45%]">
                   <TiltCard className="p-8">
-                    <div className="flex justify-between items-start mb-4">
-                      <h3 className="text-2xl font-syne font-600">{exp.role}</h3>
-                      <span className={`px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full border border-${exp.color}-500/30 bg-${exp.color}-500/10 text-${exp.color}-400 shadow-[0_0_15px_rgba(236,72,153,0.15)]`}>
+                    <div className="flex justify-between items-start mb-6">
+                      <h3 className="text-xl font-orbitron font-700 text-white uppercase">{exp.role}</h3>
+                      <span className="font-mono text-[8px] tracking-[0.2em] px-2 py-1 border border-cyber-cyan/30 text-cyber-cyan uppercase bg-cyber-cyan/5">
                         {exp.badge}
                       </span>
                     </div>
-                    <p className="text-cyan font-medium mb-1">{exp.company}</p>
-                    <p className="text-muted text-sm mb-6 flex items-center gap-2">
-                       <Briefcase size={14} /> {exp.period}
+                    <p className="text-cyber-cyan font-mono text-xs mb-1 uppercase opacity-80">{exp.company}</p>
+                    <p className="text-cyber-muted font-mono text-[10px] mb-6 flex items-center gap-2">
+                       <Briefcase size={12} /> {exp.period}
                     </p>
-                    <ul className="space-y-3">
+                    <ul className="space-y-4">
                       {exp.points.map((p, i) => (
-                        <li key={i} className="text-sm text-gray-400 flex items-start gap-3">
-                           <span className="w-1.5 h-1.5 rounded-full bg-violet mt-1.5 shrink-0" />
-                           {p}
+                        <li key={i} className="text-sm text-cyber-text/80 flex items-start gap-4">
+                           <span className="w-4 h-[1px] bg-cyber-purple mt-2.5 shrink-0" />
+                           <span className="font-rajdhani">{p}</span>
                         </li>
                       ))}
                     </ul>
                   </TiltCard>
                 </div>
 
-                <div className="z-10 bg-[#03000f] p-2 rounded-full border-2 border-violet shadow-[0_0_20px_rgba(124,58,237,0.5)] my-6 md:my-0">
-                  <div className="w-4 h-4 rounded-full bg-gradient-to-br from-violet to-cyan" />
+                <div className="hidden md:flex z-10 bg-cyber-bg p-1 border border-cyber-purple/50 my-6 md:my-0 rotate-45">
+                  <div className="w-4 h-4 bg-cyber-purple shadow-[0_0_10px_#bc13fe]" />
                 </div>
 
                 <div className="w-full md:w-[45%] hidden md:block" />
@@ -532,20 +585,20 @@ const Projects = () => {
   const projects = [
     {
       title: "Kisan AI",
-      category: "Agricultural AI Assistant",
+      category: "Agricultural Assistant",
       emoji: "🌾",
       desc: "Scalable AI assistant for rural farmers integrating LLM, weather, and government data APIs with reliable fallback architecture.",
-      tech: ["OpenRouter LLM", "Weather API", "data.gov.in", "REST APIs"],
-      tags: ["AI", "APIs", "Backend"],
+      tech: ["OpenRouter LLM", "Weather API", "REST APIs"],
+      tags: ["AI", "Backend"],
       links: { github: "#", live: "#" }
     },
     {
       title: "Emergency Triage AI",
-      category: "Hospital Triage System",
+      category: "Healthcare System",
       emoji: "🏥",
-      desc: "Reduced emergency patient prioritization from 20 minutes to 3 seconds using XGBoost ML model with real-time dashboard.",
-      tech: ["XGBoost", "Flask-SocketIO", "SQLite", "Pandas"],
-      tags: ["ML", "Healthcare", "Real-time"],
+      desc: "Reduced emergency patient prioritization from 20 mins to 3 secs using XGBoost ML model with real-time dashboard.",
+      tech: ["XGBoost", "Flask-SocketIO", "SQLite"],
+      tags: ["ML", "Real-time"],
       links: { github: "#", live: "#" }
     },
     {
@@ -553,26 +606,26 @@ const Projects = () => {
       category: "Creative GenAI",
       emoji: "🎬",
       desc: "End-to-end AI-generated advertisement: LLM scriptwriting, diffusion image generation, AI animation, and voice synthesis.",
-      tech: ["ChatGPT", "Midjourney", "Runway", "ElevenLabs"],
-      tags: ["GenAI", "Creative", "Multimodal"],
+      tech: ["Midjourney", "Runway", "ElevenLabs"],
+      tags: ["GenAI", "Creative"],
       links: { github: "#", live: "#" }
     },
     {
       title: "Smart Ride-Sharing",
-      category: "Full-Stack Project",
+      category: "Full-Stack",
       emoji: "🚗",
       desc: "Carpooling platform with multi-role workflows, real-time route optimization, and secure payments via Stripe.",
-      tech: ["React", "Spring Boot", "MySQL", "OSRM APIs"],
-      tags: ["Full-Stack", "Backend", "Infosys"],
+      tech: ["Spring Boot", "MySQL", "OSRM APIs"],
+      tags: ["Full-Stack", "Backend"],
       links: { github: "#", live: "#" }
     },
     {
       title: "Ransomware Detector",
-      category: "Cybersecurity ML",
+      category: "Cybersecurity",
       emoji: "🛡️",
-      desc: "Real-time detection system using hybrid ensemble ML on behavioral system-level datasets for cybersecurity threat intelligence.",
-      tech: ["Python", "Ensemble ML", "Scikit", "CyberSec"],
-      tags: ["ML", "Security", "Research"],
+      desc: "Real-time detection system using hybrid ensemble ML on behavioral system-level datasets for threat intelligence.",
+      tech: ["Python", "Ensemble ML", "Scikit"],
+      tags: ["Security", "Research"],
       links: { github: "#", live: "#" }
     }
   ];
@@ -580,39 +633,41 @@ const Projects = () => {
   return (
     <section id="projects" className="py-32 relative z-10">
       <div className="container mx-auto px-6">
-        <motion.h2 
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          className="text-4xl md:text-5xl font-syne font-800 text-gradient text-center mb-20"
-        >
-          Featured Projects
-        </motion.h2>
+        <div className="flex items-center gap-4 mb-20 justify-end text-right">
+          <div className="flex-grow h-[2px] bg-gradient-to-l from-cyber-cyan/50 to-transparent" />
+          <h2 className="text-4xl md:text-5xl font-orbitron font-900 text-white uppercase tracking-tighter">
+            ACTIVE_<span className="text-neon-cyan">PROJECTS</span>
+          </h2>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {projects.map((project, index) => (
-            <TiltCard key={index} className="flex flex-col h-full hover:scale-[1.02] transition-transform duration-300">
-              <div className="p-8 flex flex-col h-full">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet/20 to-cyan/20 flex items-center justify-center text-3xl mb-6 shadow-[0_0_20px_rgba(124,58,237,0.1)] border border-white/5">
+            <TiltCard key={index} className="flex flex-col h-full">
+              <div className="p-8 flex flex-col h-full relative">
+                <div className="absolute top-0 right-0 p-4 font-mono text-[8px] text-cyber-muted opacity-30">
+                  PROJECT_REF: {index + 104}
+                </div>
+                <div className="w-14 h-14 rounded-none border border-cyber-cyan/20 bg-cyber-cyan/5 flex items-center justify-center text-3xl mb-8">
                   {project.emoji}
                 </div>
-                <h3 className="text-xl font-syne font-600 mb-2">{project.title}</h3>
-                <p className="text-cyan text-xs font-medium uppercase tracking-widest mb-4">{project.category}</p>
-                <p className="text-muted text-sm leading-relaxed mb-6 flex-grow">
+                <h3 className="text-xl font-orbitron font-700 mb-2 uppercase text-white tracking-wider">{project.title}</h3>
+                <p className="text-cyber-purple font-mono text-[9px] uppercase tracking-[0.2em] mb-4">{project.category}</p>
+                <p className="text-cyber-muted text-sm leading-relaxed mb-8 flex-grow font-rajdhani">
                   {project.desc}
                 </p>
                 
-                <div className="flex flex-wrap gap-2 mb-8">
-                  {project.tags.map(tag => (
-                    <span key={tag} className="px-2 py-1 glass border-violet/20 text-[10px] text-violet-300 rounded font-medium">#{tag}</span>
+                <div className="flex flex-wrap gap-2 mb-8 border-l border-white/5 pl-4">
+                  {project.tech.map(t => (
+                    <span key={t} className="text-[10px] font-mono text-cyber-cyan/70">[{t}]</span>
                   ))}
                 </div>
 
                 <div className="flex items-center justify-between pt-6 border-t border-white/5">
                   <div className="flex gap-4">
-                    <motion.a href={project.links.github} className="text-muted hover:text-white transition-colors"><Github size={20} /></motion.a>
-                    <motion.a href={project.links.live} className="text-muted hover:text-white transition-colors"><ExternalLink size={20} /></motion.a>
+                    <motion.a href={project.links.github} whileHover={{ color: '#00f2ff' }} className="text-cyber-muted transition-colors"><Github size={18} /></motion.a>
+                    <motion.a href={project.links.live} whileHover={{ color: '#00f2ff' }} className="text-cyber-muted transition-colors"><ExternalLink size={18} /></motion.a>
                   </div>
-                  <span className="text-[10px] text-muted-foreground font-mono">2025</span>
+                  <span className="text-[9px] text-cyber-muted font-mono tracking-tighter uppercase">// STATUS: DEPLOYED</span>
                 </div>
               </div>
             </TiltCard>
@@ -641,17 +696,16 @@ const Skills = () => {
   return (
     <section id="skills" className="py-32 relative z-10">
       <div className="container mx-auto px-6">
-        <motion.h2 
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          className="text-4xl md:text-5xl font-syne font-800 text-gradient text-center mb-20"
-        >
-          Technical Universe
-        </motion.h2>
+        <div className="flex items-center gap-4 mb-24">
+          <h2 className="text-4xl md:text-5xl font-orbitron font-900 text-white uppercase tracking-tighter">
+            TECH_<span className="text-neon-cyan">STACK</span>
+          </h2>
+          <div className="flex-grow h-[2px] bg-gradient-to-r from-cyber-cyan/50 to-transparent" />
+        </div>
 
-        <div className="space-y-16">
+        <div className="space-y-24">
           <motion.div 
-            className="flex flex-wrap justify-center gap-4"
+            className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4"
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
@@ -663,26 +717,26 @@ const Skills = () => {
               <motion.div
                 key={skill.name}
                 variants={{
-                  hidden: { opacity: 0, scale: 0.8 },
-                  visible: { opacity: 1, scale: 1 }
+                  hidden: { opacity: 0, y: 20 },
+                  visible: { opacity: 1, y: 0 }
                 }}
-                whileHover={{ scale: 1.1, backgroundColor: 'rgba(124, 58, 237, 0.15)', borderColor: 'rgba(124, 58, 237, 0.5)' }}
-                className="glass px-6 py-3 flex items-center gap-3 border-white/5 cursor-default transition-all duration-300"
+                whileHover={{ y: -5, borderColor: '#00f2ff', boxShadow: '0 0 15px rgba(0,242,255,0.2)' }}
+                className="glass-card p-6 flex flex-col items-center gap-4 border-white/5 cursor-default transition-all duration-300"
               >
-                <span>{skill.icon}</span>
-                <span className="font-medium">{skill.name}</span>
+                <span className="text-3xl">{skill.icon}</span>
+                <span className="font-mono text-[10px] tracking-widest uppercase text-center text-cyber-text">{skill.name}</span>
               </motion.div>
             ))}
           </motion.div>
 
-          <div className="text-center">
-             <h3 className="text-pink font-syne font-600 mb-8 tracking-widest uppercase text-sm">GenAI & Workflow Tools</h3>
-             <div className="flex flex-wrap justify-center gap-3">
+          <div className="text-center bg-cyber-purple/5 p-12 border-y border-cyber-purple/20">
+             <h3 className="text-cyber-pink font-orbitron font-700 mb-10 tracking-[0.3em] uppercase text-sm">// GEN_AI_&_WORKFLOW_ENGINES</h3>
+             <div className="flex flex-wrap justify-center gap-4">
                 {tools.map((tool) => (
                   <motion.span 
                     key={tool}
-                    whileHover={{ scale: 1.05, borderLeft: '3px solid #EC4899' }}
-                    className="glass px-4 py-2 text-sm text-muted rounded-full border-pink/20"
+                    whileHover={{ scale: 1.05, background: 'rgba(255,0,247,0.1)' }}
+                    className="glass-card px-6 py-2 text-xs font-mono text-cyber-text tracking-widest border-cyber-pink/20"
                   >
                     {tool}
                   </motion.span>
@@ -716,33 +770,34 @@ const GitHubHeatmap = () => {
 
   const getCellColor = (level) => {
     switch(level) {
-      case 0: return 'rgba(255,255,255,0.04)';
-      case 1: return 'rgba(124,58,237,0.25)';
-      case 2: return 'rgba(124,58,237,0.45)';
-      case 3: return 'rgba(124,58,237,0.7)';
-      case 4: return 'rgba(124,58,237,1.0)';
-      default: return 'rgba(255,255,255,0.04)';
+      case 0: return 'rgba(0, 242, 255, 0.05)';
+      case 1: return 'rgba(188, 19, 254, 0.2)';
+      case 2: return 'rgba(188, 19, 254, 0.4)';
+      case 3: return 'rgba(188, 19, 254, 0.7)';
+      case 4: return 'rgba(188, 19, 254, 1.0)';
+      default: return 'rgba(0, 242, 255, 0.05)';
     }
   };
 
   return (
     <section className="py-32 relative z-10">
       <div className="container mx-auto px-6">
-        <div className="glass p-12 overflow-hidden">
+        <div className="glass-card p-12 overflow-hidden relative">
+          <div className="absolute top-0 right-0 p-4 font-mono text-[8px] text-cyber-cyan opacity-20">DATA_MIRROR: @MadhuGit-hub</div>
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
             <div>
-              <h2 className="text-3xl font-syne font-800 mb-2">GitHub Activity</h2>
-              <a href="https://github.com/MadhuGit-hub" target="_blank" className="text-muted hover:text-white transition-colors flex items-center gap-2">
-                @MadhuGit-hub <ExternalLink size={14} />
+              <h2 className="text-3xl font-orbitron font-800 mb-2 uppercase text-white tracking-widest">NEURAL_ACTIVITY</h2>
+              <a href="https://github.com/MadhuGit-hub" target="_blank" className="text-cyber-cyan hover:text-white transition-colors flex items-center gap-2 font-mono text-xs">
+                ACCESS_REMOTE_REPO <ExternalLink size={12} />
               </a>
             </div>
             <div className="flex gap-4">
-               {['🔥 Active', '⭐ Contributor'].map(s => <div key={s} className="glass px-4 py-1 text-[10px] uppercase font-bold text-cyan border-cyan/20">{s}</div>)}
+               {['ACTIVE', 'COMMITTING'].map(s => <div key={s} className="glass-card px-4 py-1 text-[8px] uppercase font-bold text-cyber-cyan border-cyber-cyan/30 bg-cyber-cyan/5">{s}</div>)}
             </div>
           </div>
 
           <div className="overflow-x-auto pb-4 custom-scrollbar">
-            <div className="grid grid-flow-col grid-rows-7 gap-[3px] min-w-[700px]">
+            <div className="grid grid-flow-col grid-rows-7 gap-[4px] min-w-[700px]">
               {cells.map((level, i) => (
                 <motion.div
                   key={i}
@@ -750,18 +805,18 @@ const GitHubHeatmap = () => {
                   whileInView={{ opacity: 1 }}
                   transition={{ duration: 0.3, delay: i * 0.001 }}
                   style={{ backgroundColor: getCellColor(level) }}
-                  className={`w-3 h-3 rounded-[2px] ${level > 2 && getRandom(i) > 0.9 ? 'shadow-[0_0_8px_rgba(6,182,212,0.8)] !bg-cyan' : ''}`}
+                  className={`w-3 h-3 ${level > 2 && getRandom(i) > 0.9 ? 'shadow-[0_0_10px_#bc13fe] !bg-cyber-purple' : ''} border border-white/5`}
                 />
               ))}
             </div>
           </div>
 
-          <div className="flex items-center justify-between mt-6 text-[10px] text-muted uppercase tracking-widest font-medium">
-            <span>Less</span>
+          <div className="flex items-center justify-between mt-6 text-[8px] text-cyber-muted uppercase tracking-[0.4em] font-mono">
+            <span>DORMANT</span>
             <div className="flex gap-1">
-              {[0,1,2,3,4].map(l => <div key={l} style={{ backgroundColor: getCellColor(l) }} className="w-3 h-3 rounded-[2px]" />)}
+              {[0,1,2,3,4].map(l => <div key={l} style={{ backgroundColor: getCellColor(l) }} className="w-3 h-3" />)}
             </div>
-            <span>More</span>
+            <span>INTENSE</span>
           </div>
         </div>
       </div>
@@ -775,45 +830,59 @@ const CertsAchievements = () => {
     <section className="py-32 relative z-10">
       <div className="container mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-16">
         <div>
-          <h2 className="text-3xl font-syne font-800 text-gradient mb-12">Certifications</h2>
+          <div className="flex items-center gap-4 mb-12">
+            <h2 className="text-3xl font-orbitron font-800 text-white uppercase tracking-wider">CERTIFICATIONS</h2>
+            <div className="flex-grow h-[1px] bg-cyber-cyan/30" />
+          </div>
           <div className="space-y-4">
             {[
               { title: "Generative AI — Google Cloud", icon: "🎓" },
               { title: "Python AI Development", icon: "🐍" },
-              { title: "Infosys Springboard — Certifications", icon: "📜" },
-              { title: "Internshala Student Partner", icon: "🤝" }
+              { title: "Infosys Springboard", icon: "📜" },
+              { title: "Internshala Partner", icon: "🤝" }
             ].map((cert, i) => (
               <motion.div 
                 key={i}
-                whileInView={{ x: [ -20, 0 ], opacity: [0, 1] }}
-                className="glass p-6 border-l-4 border-violet flex items-center gap-6 hover:shadow-[0_0_30px_rgba(124,58,237,0.15)] transition-shadow"
+                initial={{ x: -20, opacity: 0 }}
+                whileInView={{ x: 0, opacity: 1 }}
+                className="glass-card p-6 border-l-2 border-cyber-cyan flex items-center gap-6 hover:bg-cyber-cyan/5 transition-all"
               >
                 <span className="text-2xl">{cert.icon}</span>
-                <span className="font-medium text-lg">{cert.title}</span>
+                <span className="font-orbitron font-600 text-sm tracking-widest text-cyber-text uppercase">{cert.title}</span>
               </motion.div>
             ))}
           </div>
         </div>
 
         <div>
-          <h2 className="text-3xl font-syne font-800 text-gradient mb-12">Achievements</h2>
-          <div className="relative pl-8 space-y-12 after:content-[''] after:absolute after:left-[11px] after:top-2 after:bottom-2 after:w-[2px] after:bg-white/10">
-             {[
-               "Adobe India Hackathon — Participant",
-               "SRM Smart Park Hackathon — Participant",
-               "National Level Tech Fest — Coding & Design Winner"
-             ].map((ach, i) => (
-               <motion.div 
-                 key={i}
-                 whileInView={{ x: [ 20, 0 ], opacity: [0, 1] }}
-                 className="relative"
-               >
-                 <div className="absolute left-[-29px] top-1.5 w-[14px] h-[14px] rounded-full bg-violet shadow-[0_0_10px_#7C3AED] z-10" />
-                 <h3 className="text-xl font-syne flex items-center gap-3 italic">
-                    <Award className="text-violet" size={24} /> {ach}
-                 </h3>
-               </motion.div>
-             ))}
+          <div className="flex items-center gap-4 mb-12">
+            <h2 className="text-3xl font-orbitron font-800 text-white uppercase tracking-wider">ACHIEVEMENTS</h2>
+            <div className="flex-grow h-[1px] bg-cyber-purple/30" />
+          </div>
+          <div className="relative pl-8 space-y-12 before:content-[''] before:absolute before:left-0 before:top-2 before:bottom-2 before:w-[1px] before:bg-cyber-purple/20">
+            {[
+              { title: "Hackathon Finalist", desc: "Top 10 in State-level AI Hackathon", icon: "🏆" },
+              { title: "Open Source Contributor", desc: "Merged 15+ PRs in GenAI tools", icon: "🚀" },
+              { title: "Academic Excellence", desc: "Consistent top tier GPA performer", icon: "📈" }
+            ].map((ach, i) => (
+              <motion.div 
+                key={i}
+                initial={{ x: 20, opacity: 0 }}
+                whileInView={{ x: 0, opacity: 1 }}
+                className="relative"
+              >
+                <div className="absolute -left-[36px] top-1 w-4 h-4 bg-cyber-bg border border-cyber-purple flex items-center justify-center rotate-45 z-10">
+                  <div className="w-1.5 h-1.5 bg-cyber-purple shadow-[0_0_5px_#bc13fe]" />
+                </div>
+                <div className="glass-card p-6 border-l-2 border-cyber-purple">
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="text-lg">{ach.icon}</span>
+                    <h3 className="font-orbitron font-700 text-sm uppercase text-white">{ach.title}</h3>
+                  </div>
+                  <p className="text-cyber-muted text-xs font-mono">{ach.desc}</p>
+                </div>
+              </motion.div>
+            ))}
           </div>
         </div>
       </div>
@@ -825,117 +894,90 @@ const CertsAchievements = () => {
 const Contact = () => {
   return (
     <section id="contact" className="py-32 relative z-10">
-      <div className="container mx-auto px-6 text-center">
+      <div className="container mx-auto px-6">
         <motion.div 
-          className="glass max-w-4xl mx-auto p-16 relative overflow-hidden"
           initial={{ opacity: 0, y: 50 }}
           whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="glass-card p-12 md:p-20 relative overflow-hidden"
         >
-          <div className="absolute top-0 right-0 w-64 h-64 bg-violet/10 blur-[100px] pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-cyan/10 blur-[100px] pointer-events-none" />
-
-          <h2 className="text-5xl md:text-6xl font-syne font-800 text-gradient mb-8">
-            Let's Build Something Incredible
-          </h2>
-          <p className="text-muted text-xl mb-12 max-w-2xl mx-auto">
-             Open to SDE · AI Engineering · Backend roles — Full-time / Internship.
-          </p>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16 text-left">
-            {[
-              { icon: <Mail />, label: "Email", value: "cherukurimadhu52@gmail.com", href: "mailto:cherukurimadhu52@gmail.com" },
-              { icon: <Linkedin />, label: "LinkedIn", value: "in/madhu-cherukuri", href: "https://www.linkedin.com/in/madhu-cherukuri-827094303" },
-              { icon: <Github />, label: "GitHub", value: "MadhuGit-hub", href: "https://github.com/MadhuGit-hub" },
-              { icon: <MapPin />, label: "Location", value: "Hyderabad, India" },
-              { icon: <Phone />, label: "Phone", value: "+91 78422-85972", href: "tel:+917842285972" }
-            ].map((item, i) => (
-              <div key={i} className="flex items-center gap-4 group">
-                 <div className="w-12 h-12 glass flex items-center justify-center text-violet group-hover:text-cyan transition-colors">
-                    {item.icon}
-                 </div>
-                 <div>
-                    <p className="text-[10px] uppercase tracking-widest text-muted">{item.label}</p>
-                    {item.href ? (
-                      <a href={item.href} className="text-sm font-medium hover:text-violet transition-colors">{item.value}</a>
-                    ) : (
-                      <p className="text-sm font-medium">{item.value}</p>
-                    )}
-                 </div>
-              </div>
-            ))}
+          {/* HUD decor */}
+          <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-cyber-cyan to-transparent animate-scan" style={{ animationDuration: '4s' }} />
+          
+          <div className="max-w-2xl mx-auto text-center mb-16">
+            <h2 className="text-4xl md:text-6xl font-orbitron font-900 text-white uppercase mb-6 tracking-tighter">
+              INITIALIZE_<span className="text-neon-cyan">UPLINK</span>
+            </h2>
+            <p className="text-cyber-muted font-rajdhani text-lg">
+              Encryption active. Secure channel established. 
+              <br />
+              Ready to process your communication.
+            </p>
           </div>
 
           <div className="flex flex-wrap justify-center gap-6 mb-20">
              <motion.a 
                href="https://www.linkedin.com/in/madhu-cherukuri-827094303" target="_blank"
-               whileHover={{ scale: 1.04 }}
-               className="btn-glass flex items-center gap-2 border-violet/50"
+               whileHover={{ scale: 1.05 }}
+               className="btn-cyber !bg-none border border-cyber-cyan/50 text-cyber-cyan hover:bg-cyber-cyan/10"
              >
-               LinkedIn Profile <ExternalLink size={18} />
+               CONNECT_VIA_LINKEDIN
              </motion.a>
              <motion.a 
                href="https://github.com/MadhuGit-hub" target="_blank"
-               whileHover={{ scale: 1.04 }}
-               className="btn-glass flex items-center gap-2 border-cyan/50"
+               whileHover={{ scale: 1.05 }}
+               className="btn-cyber !bg-none border border-cyber-purple/50 text-cyber-purple hover:bg-cyber-purple/10"
              >
-               GitHub Profile <ExternalLink size={18} />
+               ACCESS_GIT_RECON
              </motion.a>
           </div>
 
           {/* Contact Form */}
-          <div className="max-w-2xl mx-auto">
-            <h3 className="text-2xl font-syne font-600 mb-8 text-center flex items-center justify-center gap-3">
-              <span className="w-8 h-[1px] bg-violet/50" />
-              Send a Message
-              <span className="w-8 h-[1px] bg-violet/50" />
-            </h3>
+          <div className="max-w-2xl mx-auto border-t border-white/5 pt-16">
             <form 
               action="https://formspree.io/f/mqewpjao"
               method="POST"
-              className="space-y-6"
+              className="space-y-8"
             >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="text-left">
-                  <label htmlFor="name" className="block text-xs uppercase tracking-widest text-muted mb-2 ml-1">Full Name</label>
+                  <label htmlFor="name" className="block font-mono text-[10px] uppercase tracking-[0.3em] text-cyber-cyan mb-3 ml-1">// PROTOCOL: SENDER_NAME</label>
                   <input 
                     type="text" 
                     name="name" 
                     id="name" 
-                    placeholder="John Doe"
                     required
-                    className="input-field" 
+                    className="w-full bg-black/50 border border-white/10 p-4 font-mono text-xs text-white focus:outline-none focus:border-cyber-cyan transition-all" 
                   />
                 </div>
                 <div className="text-left">
-                  <label htmlFor="email" className="block text-xs uppercase tracking-widest text-muted mb-2 ml-1">Email Address</label>
+                  <label htmlFor="email" className="block font-mono text-[10px] uppercase tracking-[0.3em] text-cyber-cyan mb-3 ml-1">// PROTOCOL: RETURN_ADDR</label>
                   <input 
                     type="email" 
                     name="email" 
                     id="email" 
-                    placeholder="john@example.com"
                     required
-                    className="input-field" 
+                    className="w-full bg-black/50 border border-white/10 p-4 font-mono text-xs text-white focus:outline-none focus:border-cyber-cyan transition-all" 
                   />
                 </div>
               </div>
               <div className="text-left">
-                <label htmlFor="message" className="block text-xs uppercase tracking-widest text-muted mb-2 ml-1">Your Message</label>
+                <label htmlFor="message" className="block font-mono text-[10px] uppercase tracking-[0.3em] text-cyber-purple mb-3 ml-1">// PROTOCOL: PAYLOAD_CONTENT</label>
                 <textarea 
                   name="message" 
                   id="message" 
                   rows="5" 
-                  placeholder="Hello, I'd like to talk about..."
                   required
-                  className="input-field resize-none"
+                  className="w-full bg-black/50 border border-white/10 p-4 font-mono text-xs text-white focus:outline-none focus:border-cyber-purple transition-all resize-none"
                 ></textarea>
               </div>
               <motion.button
                 type="submit"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="btn-primary w-full shadow-lg shadow-violet/20"
+                className="btn-cyber w-full !clip-none py-5 tracking-[0.5em]"
               >
-                Launch Message
+                EXECUTE_MESSAGE_LAUNCH
               </motion.button>
             </form>
           </div>
@@ -957,37 +999,41 @@ const Navbar = () => {
   }, []);
 
   const navLinks = [
-    { name: 'About', href: '#about' },
-    { name: 'Experience', href: '#experience' },
-    { name: 'Projects', href: '#projects' },
-    { name: 'Skills', href: '#skills' },
-    { name: 'Contact', href: '#contact' },
+    { name: 'HOME', href: '#home', code: '01' },
+    { name: 'PROFILE', href: '#about', code: '02' },
+    { name: 'CAREER', href: '#experience', code: '03' },
+    { name: 'ACTIVE_PROJECTS', href: '#projects', code: '04' },
+    { name: 'TECH_STACK', href: '#skills', code: '05' },
+    { name: 'CONTACT', href: '#contact', code: '06' },
   ];
 
   return (
-    <nav className={`fixed top-0 left-0 w-full z-[100] transition-all duration-500 ${scrolled ? 'py-4 glass !rounded-none border-b border-violet/20' : 'py-8'}`}>
+    <nav className={`fixed top-0 left-0 w-full z-[100] transition-all duration-500 ${scrolled ? 'py-4 bg-black/80 backdrop-blur-md border-b border-cyber-cyan/20 shadow-[0_0_20px_rgba(0,242,255,0.1)]' : 'py-8'}`}>
       <div className="container mx-auto px-6 flex justify-between items-center">
-        <div className="flex items-center gap-3">
-          <span className="text-2xl font-syne font-800 text-gradient">MC</span>
-          <span className="text-xs font-dmsans text-muted hidden sm:block">Madhu Cherukuri</span>
+        <div className="flex items-center gap-4 group cursor-pointer" onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}>
+          <div className="w-10 h-10 border border-cyber-cyan flex items-center justify-center font-orbitron font-900 text-xl text-cyber-cyan group-hover:bg-cyber-cyan group-hover:text-black transition-all">
+            MC
+          </div>
+          <span className="text-[10px] font-mono text-cyber-muted tracking-[0.3em] uppercase hidden sm:block group-hover:text-cyber-cyan transition-colors">Madhu_Cherukuri.sys</span>
         </div>
 
         {/* Desktop Nav */}
-        <div className="hidden md:flex gap-10">
+        <div className="hidden lg:flex gap-8">
           {navLinks.map(link => (
             <a 
               key={link.name} 
               href={link.href} 
-              className="text-sm font-medium text-white/80 hover:text-violet transition-colors relative group"
+              className="font-mono text-[10px] tracking-[0.2em] text-cyber-muted hover:text-cyber-cyan transition-all flex flex-col items-center group"
             >
+              <span className="text-cyber-purple/50 group-hover:text-cyber-purple transition-colors mb-1">{link.code}</span>
               {link.name}
-              <span className="absolute left-0 bottom-[-4px] w-0 h-[2px] bg-gradient-to-r from-violet to-cyan transition-all duration-300 group-hover:w-full" />
+              <span className="w-0 h-[1px] bg-cyber-cyan group-hover:w-full transition-all duration-300 mt-1" />
             </a>
           ))}
         </div>
 
         {/* Mobile Toggle */}
-        <button className="md:hidden text-white" onClick={() => setIsOpen(!isOpen)}>
+        <button className="lg:hidden text-cyber-cyan" onClick={() => setIsOpen(!isOpen)}>
           {isOpen ? <X size={28} /> : <Menu size={28} />}
         </button>
       </div>
@@ -996,19 +1042,20 @@ const Navbar = () => {
       <AnimatePresence>
         {isOpen && (
           <motion.div 
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="md:hidden glass overflow-hidden !rounded-none border-b border-white/10"
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            className="fixed inset-0 z-[90] bg-cyber-bg/95 backdrop-blur-xl lg:hidden"
           >
-            <div className="flex flex-col p-8 gap-4">
+            <div className="flex flex-col items-center justify-center h-full gap-10">
               {navLinks.map(link => (
                 <a 
                   key={link.name} 
                   href={link.href} 
-                  className="text-xl font-syne font-600"
+                  className="text-2xl font-orbitron font-800 text-white hover:text-cyber-cyan transition-colors tracking-tighter"
                   onClick={() => setIsOpen(false)}
                 >
+                  <span className="text-xs font-mono text-cyber-purple mr-4">{link.code}</span>
                   {link.name}
                 </a>
               ))}
@@ -1025,16 +1072,22 @@ function App() {
   const [loading, setLoading] = useState(true);
 
   return (
-    <>
-      <AnimatePresence>
-        {loading && <LoadingScreen onComplete={() => setLoading(false)} />}
+    <div className="bg-cyber-bg min-h-screen relative overflow-hidden">
+      <AnimatePresence mode="wait">
+        {loading && <LoadingScreen key="loader" onComplete={() => setLoading(false)} />}
       </AnimatePresence>
 
       {!loading && (
-        <div className="relative bg-[#03000f] text-white selection:bg-violet/30 min-h-screen">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1 }}
+        >
+          <NeuralGrid />
+          <HUDDecorator />
           <Navbar />
           
-          <main>
+          <main className="relative z-10">
             <Hero />
             <About />
             <Experience />
@@ -1045,10 +1098,10 @@ function App() {
             <Contact />
           </main>
 
-          <footer className="py-12 border-t border-white/5 relative z-10">
+          <footer className="py-12 border-t border-cyber-cyan/10 relative z-10 bg-black/40 backdrop-blur-sm">
             <div className="container mx-auto px-6 text-center">
-               <p className="text-muted text-sm mb-8">
-                 Designed & Built with ❤️ by Madhu Cherukuri · 2025
+               <p className="font-mono text-xs tracking-tighter text-cyber-cyan/40 mb-8 uppercase">
+                 // DESIGN_MANIFEST: BUILT_BY_MADHU_CHERUKURI // YEAR_2025 // [V4.0_CYBER]
                </p>
                <div className="flex justify-center gap-6">
                  {[
@@ -1060,8 +1113,8 @@ function App() {
                     key={i}
                     href={social.href} 
                     target="_blank"
-                    whileHover={{ scale: 1.2, color: '#7C3AED' }}
-                    className="glass w-12 h-12 flex items-center justify-center text-muted transition-colors"
+                    whileHover={{ scale: 1.2, color: '#00f2ff', boxShadow: '0 0 15px rgba(0,242,255,0.4)' }}
+                    className="glass-card w-12 h-12 flex items-center justify-center text-cyber-muted transition-all duration-300"
                    >
                      {social.icon}
                    </motion.a>
@@ -1069,9 +1122,9 @@ function App() {
                </div>
             </div>
           </footer>
-        </div>
+        </motion.div>
       )}
-    </>
+    </div>
   );
 }
 
